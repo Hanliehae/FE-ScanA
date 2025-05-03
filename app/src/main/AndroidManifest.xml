@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.handscanattendance">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -13,16 +18,12 @@
         android:theme="@style/Theme.HandScanAttendance">
 
         <!-- Login Activity (TIDAK LAGI jadi launcher) -->
-        <activity android:name=".ui.auth.LoginActivity" android:exported="true" />
-
-        <!-- Main activity -->
-        <activity android:name="com.example.handscanattendance.view.MainActivity" android:exported="false" />
+        <activity android:name="com.example.handscanattendance.ui.auth.LoginActivity" android:exported="true" />
 
         <!-- Register Activity -->
         <activity android:name="com.example.handscanattendance.ui.auth.RegisterActivity" android:exported="true" />
 
         <!-- Admin Activities -->
-
         <!-- AdminHomeActivity SEKARANG jadi launcher -->
         <activity android:name="com.example.handscanattendance.ui.admin.AdminHomeActivity" android:exported="true">
             <intent-filter>
@@ -33,10 +34,8 @@
 
         <!-- ScanActivity dengan orientasi portrait -->
         <activity android:name="com.example.handscanattendance.ui.admin.ScanActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity android:name="com.example.handscanattendance.ui.admin.JadwalActivity" android:exported="false" />
-        <activity android:name="com.example.handscanattendance.ui.admin.MataKuliahActivity" android:exported="false" />
+            android:exported="false" />
+        <activity android:name="com.example.handscanattendance.ui.admin.MataKuliahActivity" android:exported="true" />
 
     </application>
 

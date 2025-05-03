@@ -5,11 +5,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
@@ -29,17 +29,21 @@ public final class ActivityHomeMahasiswaBinding implements ViewBinding {
   public final Button attendanceHistoryButton;
 
   @NonNull
+  public final CardView bottomContainer;
+
+  @NonNull
   public final ImageView logo;
 
   @NonNull
-  public final ImageButton logoutButton;
+  public final ImageView logoutButton;
 
   private ActivityHomeMahasiswaBinding(@NonNull ConstraintLayout rootView,
-      @NonNull TextView appName, @NonNull Button attendanceHistoryButton, @NonNull ImageView logo,
-      @NonNull ImageButton logoutButton) {
+      @NonNull TextView appName, @NonNull Button attendanceHistoryButton,
+      @NonNull CardView bottomContainer, @NonNull ImageView logo, @NonNull ImageView logoutButton) {
     this.rootView = rootView;
     this.appName = appName;
     this.attendanceHistoryButton = attendanceHistoryButton;
+    this.bottomContainer = bottomContainer;
     this.logo = logo;
     this.logoutButton = logoutButton;
   }
@@ -83,6 +87,12 @@ public final class ActivityHomeMahasiswaBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.bottom_container;
+      CardView bottomContainer = ViewBindings.findChildViewById(rootView, id);
+      if (bottomContainer == null) {
+        break missingId;
+      }
+
       id = R.id.logo;
       ImageView logo = ViewBindings.findChildViewById(rootView, id);
       if (logo == null) {
@@ -90,13 +100,13 @@ public final class ActivityHomeMahasiswaBinding implements ViewBinding {
       }
 
       id = R.id.logout_button;
-      ImageButton logoutButton = ViewBindings.findChildViewById(rootView, id);
+      ImageView logoutButton = ViewBindings.findChildViewById(rootView, id);
       if (logoutButton == null) {
         break missingId;
       }
 
       return new ActivityHomeMahasiswaBinding((ConstraintLayout) rootView, appName,
-          attendanceHistoryButton, logo, logoutButton);
+          attendanceHistoryButton, bottomContainer, logo, logoutButton);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

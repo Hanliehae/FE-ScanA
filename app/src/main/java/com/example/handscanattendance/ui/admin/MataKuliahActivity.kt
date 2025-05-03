@@ -1,107 +1,138 @@
 package com.example.handscanattendance.ui.admin
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import android.view.LayoutInflater
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.handscanattendance.R
-import com.example.handscanattendance.data.MataKuliah
-import com.example.handscanattendance.data.MataKuliahAdapter
+import com.example.handscanattendance.data.model.MataKuliah
+import com.example.handscanattendance.network.ApiClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MataKuliahActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MataKuliahAdapter
-    private lateinit var btnTambahMk: Button
-    private lateinit var spinnerTahunAjaran: Spinner
-    private lateinit var spinnerSemester: Spinner
-
-    private val allMataKuliah = mutableListOf(
-        MataKuliah(
-            id = "1",
-            idMk = "MK001",
-            nama = "Pemrograman Mobile",
-            semester = "Ganjil",
-            tahunAkademik = "2024/2025"
-        ),
-        MataKuliah(
-            id = "2",
-            idMk = "MK002",
-            nama = "Struktur Data",
-            semester = "Genap",
-            tahunAkademik = "2024/2025"
-        ),
-        MataKuliah(
-            id = "3",
-            idMk = "MK003",
-            nama = "Jaringan Komputer",
-            semester = "Ganjil",
-            tahunAkademik = "2023/2024"
-        )
-    )
-
-    private val tahunAjaranList = listOf("Semua", "2022/2023", "2023/2024", "2024/2025")
-    private val semesterList = listOf("Semua", "Ganjil", "Genap")
+    private val daftarMk = mutableListOf<MataKuliah>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mata_kuliah)
 
         recyclerView = findViewById(R.id.rv_mata_kuliah)
-        btnTambahMk = findViewById(R.id.btn_tambah_mk)
-        spinnerTahunAjaran = findViewById(R.id.spinner_tahun_ajaran)
-        spinnerSemester = findViewById(R.id.spinner_semester)
+        val btnTambahMk: Button = findViewById(R.id.btn_tambah_mk)
 
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
-        adapter = MataKuliahAdapter(allMataKuliah.toMutableList()) { mk ->
-            val intent = Intent(this, MahasiswaPerMkActivity::class.java)
-            intent.putExtra("id_mk", mk.id)
-            intent.putExtra("nama_mk", mk.nama)
+        adapter = MataKuliahAdapter(daftarMk) { mk ->
+            val intent = Intent(this, MahasiswaPerMKActivity::class.java)
+            intent.putExtra("idMk", mk.idMk)
+            intent.putExtra("namaMk", mk.namaMk)
+            intent.putExtra("kelas", mk.kelas)
+            intent.putExtra("semester", mk.semester)
+            intent.putExtra("tahunAkademik", mk.tahunAkademik)
             startActivity(intent)
         }
+
+        recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        // Spinner Tahun Ajaran
-        val tahunAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, tahunAjaranList)
-        spinnerTahunAjaran.adapter = tahunAdapter
-
-        // Spinner Semester
-        val semesterAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, semesterList)
-        spinnerSemester.adapter = semesterAdapter
-
-        // Listener untuk filter data
-        val filterListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                filterMataKuliah()
-            }
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
-
-        spinnerTahunAjaran.onItemSelectedListener = filterListener
-        spinnerSemester.onItemSelectedListener = filterListener
-
         btnTambahMk.setOnClickListener {
-            val dialog = TambahMataKuliahDialogFragment { mkBaru ->
-                allMataKuliah.add(mkBaru)
-                filterMataKuliah()
-            }
-            dialog.show(supportFragmentManager, "TambahMataKuliah")
+            tampilkanDialogTambahMk()
         }
+
+        loadMataKuliah()
     }
 
-    private fun filterMataKuliah() {
-        val selectedTahun = spinnerTahunAjaran.selectedItem.toString()
-        val selectedSemester = spinnerSemester.selectedItem.toString()
+    private fun loadMataKuliah() {
+        ApiClient.instance.getMataKuliah().enqueue(object : Callback<List<MataKuliah>> {
+            override fun onResponse(call: Call<List<MataKuliah>>, response: Response<List<MataKuliah>>) {
+                if (response.isSuccessful) {
+                    daftarMk.clear()
+                    daftarMk.addAll(response.body() ?: emptyList())
+                    adapter.notifyDataSetChanged()
+                } else {
+                    Toast.makeText(this@MataKuliahActivity, "Gagal memuat data", Toast.LENGTH_SHORT).show()
+                }
+            }
 
-        val filtered = allMataKuliah.filter {
-            (selectedTahun == "Semua" || it.tahunAkademik == selectedTahun) &&
-                    (selectedSemester == "Semua" || it.semester == selectedSemester)
+            override fun onFailure(call: Call<List<MataKuliah>>, t: Throwable) {
+                Toast.makeText(this@MataKuliahActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun tampilkanDialogTambahMk() {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_tambah_mk, null)
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+
+        val edtIdMk = view.findViewById<EditText>(R.id.edtIdMk)
+        val edtNamaMk = view.findViewById<EditText>(R.id.edtNamaMk)
+        val edtKelas = view.findViewById<EditText>(R.id.edtKelas)
+        val spinnerSemester = view.findViewById<Spinner>(R.id.spinnerSemester)
+        val edtTahunAkademik = view.findViewById<EditText>(R.id.edtTahunAkademik)
+        val btnBatal = view.findViewById<Button>(R.id.btnBatal)
+        val btnSimpan = view.findViewById<Button>(R.id.btnSimpan)
+
+        val semesterList = listOf("Ganjil", "Genap")
+        val adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_item, semesterList)
+        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerSemester.adapter = adapterSpinner
+
+        btnSimpan.setOnClickListener {
+            val idMk = edtIdMk.text.toString()
+            val namaMk = edtNamaMk.text.toString()
+            val kelas = edtKelas.text.toString()
+            val semester = spinnerSemester.selectedItem.toString()
+            val tahunAkademik = edtTahunAkademik.text.toString()
+
+            // Validasi input
+            if (idMk.isBlank() || namaMk.isBlank() || kelas.isBlank() || tahunAkademik.isBlank()) {
+                Toast.makeText(this, "Semua kolom wajib diisi", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Validasi format tahun akademik
+            val tahunRegex = Regex("\\d{4}/\\d{4}")
+            if (!tahunRegex.matches(tahunAkademik)) {
+                Toast.makeText(this, "Format Tahun Akademik harus ####/####", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Cek duplikat ID
+            if (daftarMk.any { it.idMk == idMk }) {
+                Toast.makeText(this, "ID Mata Kuliah sudah ada", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val mk = MataKuliah(idMk, namaMk, kelas, semester, tahunAkademik)
+
+            ApiClient.instance.tambahMataKuliah(mk).enqueue(object : Callback<MataKuliah> {
+                override fun onResponse(call: Call<MataKuliah>, response: Response<MataKuliah>) {
+                    if (response.isSuccessful) {
+                        daftarMk.add(mk)
+                        adapter.notifyItemInserted(daftarMk.size - 1)
+                        Toast.makeText(this@MataKuliahActivity, "Berhasil disimpan", Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    } else {
+                        Toast.makeText(this@MataKuliahActivity, "Gagal simpan: ${response.message()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<MataKuliah>, t: Throwable) {
+                    Toast.makeText(this@MataKuliahActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
         }
 
-        adapter.updateData(filtered)
+        btnBatal.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 }

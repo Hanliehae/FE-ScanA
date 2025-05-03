@@ -1,41 +1,39 @@
 package com.example.handscanattendance.network
 
-import com.example.handscanattendance.data.Mahasiswa
-import com.example.handscanattendance.model.LoginCredentials
-import com.example.handscanattendance.model.LoginResponse
-import com.example.handscanattendance.model.MataKuliahRequest
-import com.example.handscanattendance.model.MataKuliahResponse
-import com.example.handscanattendance.model.RegisterRequest
-import com.example.handscanattendance.model.RegisterResponse
+import com.example.handscanattendance.data.model.*
+import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.*
-import retrofit2.http.GET
 
 interface ApiService {
-    // Login
+    // Login & Register (Coroutine)
     @POST("login")
-    suspend fun login(@Body credentials: LoginCredentials): LoginResponse
+    suspend fun login(@Body credentials: LoginCredentials): Response<LoginResponse>
 
-    // Register
     @POST("register")
-    suspend fun register(@Body request: RegisterRequest): RegisterResponse
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
 
-    // Mendapatkan Daftar Mahasiswa
+    // Mahasiswa (Coroutine)
+    @POST("mahasiswa")
+    suspend fun addMahasiswa(@Body mahasiswa: MahasiswaModel): Response<MahasiswaModel>
+
     @GET("mahasiswa")
-    suspend fun getMahasiswa(): List<Mahasiswa>
+    suspend fun getMahasiswa(): List<MahasiswaModel>
 
-    // Menghapus Mahasiswa berdasarkan ID
     @DELETE("mahasiswa/{id}")
-    suspend fun hapusMahasiswa(@Path("id") id: String): Mahasiswa
+    suspend fun hapusMahasiswa(@Path("id") id: String): Response<MahasiswaModel>
 
-    // Mendapatkan Daftar Mata Kuliah
-    @GET("mata-kuliah")
-    suspend fun getMataKuliah(): List<MataKuliahResponse>
+    // Presensi (Coroutine)
+    @POST("upload-presensi")
+    suspend fun uploadPresensi(@Body request: UploadPresensiRequest): Response<UploadPresensiResponse>
 
-    // Menambahkan Mata Kuliah
-    @POST("mata-kuliah")
-    suspend fun tambahMataKuliah(@Body mataKuliah: MataKuliahRequest): MataKuliahResponse
+    // Mata Kuliah (Callback biasa → cocok untuk Activity kamu)
+    @GET("mata_kuliah")
+    fun getMataKuliah(): Call<List<MataKuliah>>
 
-    // Menghapus Mata Kuliah
-    @DELETE("mata-kuliah/{id}")
-    suspend fun hapusMataKuliah(@Path("id") id: String): MataKuliahResponse
+    @POST("mata_kuliah")
+    fun tambahMataKuliah(@Body mataKuliah: MataKuliah): Call<MataKuliah>
+
+    @DELETE("mata_kuliah/{id}")
+    fun hapusMataKuliah(@Path("id") id: String): Call<MataKuliahResponse>
 }
